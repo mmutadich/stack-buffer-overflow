@@ -36,8 +36,15 @@ bool compile_ast(node_t *node) {
             }
             printf("popq %%rax\n");
             switch (bin->op) {
+                case ('/'): {
+                    printf("cqto\n");
+                    printf("idivq %%rdi\n");
+                    printf("movq %%rax, %%rdi\n");
+                    return true;
+                }
                 case ('*'): {
                     printf("imulq %%rax, %%rdi\n");
+
                     return true;
                 }
                 case ('-'): {
