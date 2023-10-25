@@ -28,28 +28,27 @@ bool compile_ast(node_t *node) {
         case (BINARY_OP): {
             binary_node_t *bin = (binary_node_t *) node;
             if (!compile_ast(bin->left)) {
-                        return false;
+                return false;
             }
             printf("pushq %%rdi\n");
             if (!compile_ast(bin->right)) {
-                        return false;
+                return false;
             }
             printf("popq %%rax\n");
-            switch(bin->op){
-                case('*'):{
+            switch (bin->op) {
+                case ('*'): {
                     printf("imulq %%rax, %%rdi\n");
                     return true;
                 }
-                case('-'):{
+                case ('-'): {
                     printf("subq %%rdi, %%rax\n");
                     printf("movq %%rax, %%rdi\n");
                     return true;
                 }
-                case('+'):{
+                case ('+'): {
                     printf("addq %%rax, %%rdi\n");
                     return true;
                 }
-
             }
         }
         case (VAR): {
