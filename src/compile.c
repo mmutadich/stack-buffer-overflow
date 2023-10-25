@@ -26,7 +26,17 @@ bool compile_ast(node_t *node) {
             return true;
         }
         case (BINARY_OP): {
-            break;
+            binary_node_t *bin = (binary_node_t *) node;
+            if (!compile_ast(bin->left)) {
+                return false;
+            }
+            printf("pushq %%rdi\n");
+            if (!compile_ast(bin->right)) {
+                return false;
+            }
+            printf("popq %%rax\n");
+            printf("addq %%rax, %%rdi\n");
+            return true;
         }
         case (VAR): {
             break;
