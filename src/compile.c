@@ -116,7 +116,59 @@ bool compile_ast(node_t *node) {
             return true;
         }
         case (WHILE): {
-            break;
+            int64_t local = COUNT;
+            COUNT += 1;
+            while_node_t *conditional = (while_node_t *) node;
+            if (!compile_ast(conditional->condition->left)) {
+                return false;
+            }
+            printf("pushq %%rdi\n");
+            if (!compile_ast(conditional->condition->right)) {
+                return false;
+            }
+            printf("popq %%rax\n");
+            printf("cmpq %%rdi, %%rax\n");
+            switch (conditional->condition->op) {
+                case ('='): {
+                    printf("jne END_WHILE_LABEL%ld\n", local);
+                    break;
+                }
+                case ('>'): {
+                    printf("jle END_WHILE_LABEL%ld\n", local);
+                    break;
+                }
+                case ('<'): {
+                    printf("jge END_WHILE_LABEL%ld\n", local);
+                    break;
+                }
+            }
+            printf("WHILE_LABEL%ld:\n", local);
+            compile_ast(conditional->body);
+            if (!compile_ast(conditional->condition->left)) {
+                return false;
+            }
+            printf("pushq %%rdi\n");
+            if (!compile_ast(conditional->condition->right)) {
+                return false;
+            }
+            printf("popq %%rax\n");
+            printf("cmpq %%rdi, %%rax\n");
+            switch (conditional->condition->op) {
+                case ('='): {
+                    printf("je WHILE_LABEL%ld\n", local);
+                    break;
+                }
+                case ('>'): {
+                    printf("jg WHILE_LABEL%ld\n", local);
+                    break;
+                }
+                case ('<'): {
+                    printf("jl WHILE_LABEL%ld\n", local);
+                    break;
+                }
+            }
+            printf("END_WHILE_LABEL%ld:\n", local);
+            return true;
         }
     }
     return false; // for now, every statement causes a compilation failure
