@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+int64_t COUNT = 0;
+
 bool compile_ast(node_t *node) {
     switch (node->type) {
         case (NUM): {
@@ -59,13 +61,52 @@ bool compile_ast(node_t *node) {
             }
         }
         case (VAR): {
+            var_node_t *var_node = (var_node_t *) node;
+            var_name_t name = var_node->name;
+            int64_t sub = name - 'A';
+            printf("movq %%rbp, %%rsp\n");
+            printf("subq %ld, %%rsp\n", sub);
+            printf("");
             break;
         }
         case (LET): {
+
             break;
         }
         case (IF): {
-            break;
+            COUNT += 1;
+            if_node_t *conditional = (if_node_t *) node;
+            if (!compile_ast(conditional->condition->left)) {
+                return false;
+            }
+            if (!compile_ast(conditional->condition->right)) {
+                return false;
+            }
+            printf("cmpq %%rax, %%rdi\n");
+            switch(conditional->condition->op){
+                case('='):{
+                    printf("je IF_LABEL%ld\n", COUNT);
+                    return true;
+                }
+                case('>'):{
+                    printf("jg IF_LABEL%ld\n", COUNT);
+                    return true;
+                }
+                case('<'):{
+                    printf("jl IF_LABEL%ld\n", COUNT);
+                    return true;
+                }
+            }
+            if (!compile_ast(conditional->else_branch)) {
+                return false;
+            }
+            printf("jmp CODE_LABEL%ld\n", COUNT);
+            printf("IF_LABEL%ld\n", COUNT);
+            if (!compile_ast(conditional->if_branch)) {
+                return false;
+            }
+            printf("CODE_LABEL%ld\n", COUNT);
+            return true;
         }
         case (WHILE): {
             break;
