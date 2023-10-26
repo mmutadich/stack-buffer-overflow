@@ -6,7 +6,7 @@
 int64_t COUNT = 0;
 
 bool compile_ast(node_t *node) {
-    if (node == NULL){
+    if (node == NULL) {
         return false;
     }
     switch (node->type) {
