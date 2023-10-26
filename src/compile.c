@@ -6,6 +6,9 @@
 int64_t COUNT = 0;
 
 bool compile_ast(node_t *node) {
+    if (node == NULL){
+        return false;
+    }
     switch (node->type) {
         case (NUM): {
             printf("movq $%ld, %%rdi\n", ((num_node_t *) node)->value);
@@ -79,38 +82,37 @@ bool compile_ast(node_t *node) {
             return true;
         }
         case (IF): {
+            int64_t local = COUNT;
             COUNT += 1;
             if_node_t *conditional = (if_node_t *) node;
             if (!compile_ast(conditional->condition->left)) {
                 return false;
             }
+            printf("pushq %%rdi\n");
             if (!compile_ast(conditional->condition->right)) {
                 return false;
             }
-            printf("cmpq %%rdi, %%rsp\n");
+            printf("popq %%rax\n");
+            printf("cmpq %%rdi, %%rax\n");
             switch (conditional->condition->op) {
                 case ('='): {
-                    printf("je IF_LABEL%ld\n", COUNT);
-                    return true;
+                    printf("je IF_LABEL%ld\n", local);
+                    break;
                 }
                 case ('>'): {
-                    printf("jg IF_LABEL%ld\n", COUNT);
-                    return true;
+                    printf("jg IF_LABEL%ld\n", local);
+                    break;
                 }
                 case ('<'): {
-                    printf("jl IF_LABEL%ld\n", COUNT);
-                    return true;
+                    printf("jl IF_LABEL%ld\n", local);
+                    break;
                 }
             }
-            if (!compile_ast(conditional->else_branch)) {
-                return false;
-            }
-            printf("jmp CODE_LABEL%ld\n", COUNT);
-            printf("IF_LABEL%ld\n", COUNT);
-            if (!compile_ast(conditional->if_branch)) {
-                return false;
-            }
-            printf("CODE_LABEL%ld\n", COUNT);
+            compile_ast(conditional->else_branch);
+            printf("jmp CODE_LABEL%ld\n", local);
+            printf("IF_LABEL%ld:\n", local);
+            compile_ast(conditional->if_branch);
+            printf("CODE_LABEL%ld:\n", local);
             return true;
         }
         case (WHILE): {
