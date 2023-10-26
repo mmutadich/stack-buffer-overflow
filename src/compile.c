@@ -63,15 +63,20 @@ bool compile_ast(node_t *node) {
         case (VAR): {
             var_node_t *var_node = (var_node_t *) node;
             var_name_t name = var_node->name;
-            int64_t sub = name - 'A';
-            printf("movq %%rbp, %%rsp\n");
-            printf("subq %ld, %%rsp\n", sub);
-            printf("");
-            break;
+            int64_t sub = (name - 'A' + 1) * -8;
+            printf("movq %ld(%%rbp), %%rsi\n", sub);
+            printf("movq %%rsi, %%rdi\n");
+            return true;
         }
         case (LET): {
-
-            break;
+            let_node_t *let_node = (let_node_t *) node;
+            var_name_t name = let_node->var;
+            int64_t sub = (name - 'A' + 1) * -8;
+            if (!compile_ast(let_node->value)) {
+                return false;
+            }
+            printf("movq %%rdi, %ld(%%rbp)\n", sub);
+            return true;
         }
         case (IF): {
             COUNT += 1;
@@ -82,17 +87,17 @@ bool compile_ast(node_t *node) {
             if (!compile_ast(conditional->condition->right)) {
                 return false;
             }
-            printf("cmpq %%rax, %%rdi\n");
-            switch(conditional->condition->op){
-                case('='):{
+            printf("cmpq %%rdi, %%rsp\n");
+            switch (conditional->condition->op) {
+                case ('='): {
                     printf("je IF_LABEL%ld\n", COUNT);
                     return true;
                 }
-                case('>'):{
+                case ('>'): {
                     printf("jg IF_LABEL%ld\n", COUNT);
                     return true;
                 }
-                case('<'):{
+                case ('<'): {
                     printf("jl IF_LABEL%ld\n", COUNT);
                     return true;
                 }
