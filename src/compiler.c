@@ -21,6 +21,9 @@ void header(void) {
         ".globl basic_main\n"
         "basic_main:\n"
         "    # The main() function\n");
+    printf("    pushq %%rbp\n");
+    printf("    movq %%rsp, %%rbp\n");
+    printf("    subq $0xD0, %%rsp\n");
 }
 
 /**
@@ -29,6 +32,8 @@ void header(void) {
  * goes between the header and the footer.
  */
 void footer(void) {
+    printf("    addq $0xD0, %%rsp\n");
+    printf("    pop %%rbp\n");
     printf("    ret\n");
 }
 
