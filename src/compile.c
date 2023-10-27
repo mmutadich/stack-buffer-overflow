@@ -18,27 +18,38 @@ int64_t power_of_two(int64_t num) {
     }
 }
 
-bool check_const(binary_node_t *node) {
-    if (node == NULL) {
-        return false;
-    }
-    else if ((((node_t *) node->left)->type) == NULL ||
-             (((node_t *) node->left)->type) == NULL) {
-        return false;
-    }
-    else if ((((node_t *) node->left)->type) == NUM &&
-             (((node_t *) node->left)->type) == NUM) {
-        return true;
-    }
-    else if (((node_t *) node->left)->type == NUM) {
-        check_const(node->right);
-    }
-    else if (((node_t *) node->right)->type == NUM) {
-        check_const(node->left);
-    }
-    else {
-        check_const(node->right);
-        check_const(node->left);
+value_t opt2(node_t *node){
+    if(node->type != NUM && node->type != BINARY_OP){
+        return NULL;
+    } else if (node->type == NUM){
+        return ((num_node_t *)node)->value;
+    } else if (node->type == BINARY_OP){
+        node_t *left = opt2(((binary_node_t *)node)->left);
+        node_t *right = opt2(((binary_node_t *)node)->right);
+        if (left->type == NULL && right->type == NULL){
+            return NULL;
+        } else if (left->type == NUM && right->type == NUM){
+            switch(((binary_node_t *)node)->op){
+                value_t val;
+                case('+'):{
+                    val = ((num_node_t *)left)->value + ((num_node_t *)right)->value;
+                    break;
+                }
+                case('-'):{
+                    val = ((num_node_t *)left)->value - ((num_node_t *)right)->value;
+                    break;
+                }
+                case('*'):{
+                    val = ((num_node_t *)left)->value * ((num_node_t *)right)->value;
+                    break;
+                }
+                case('/'):{
+                    val = ((num_node_t *)left)->value / ((num_node_t *)right)->value;
+                    break;
+                }
+            return val;
+            }
+        }
     }
 }
 
