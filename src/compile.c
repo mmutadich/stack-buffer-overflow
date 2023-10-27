@@ -18,44 +18,6 @@ int64_t power_of_two(int64_t num) {
     }
 }
 
-value_t opt2(node_t *node) {
-    if (node->type != NUM && node->type != BINARY_OP) {
-        return NULL;
-    }
-    else if (node->type == NUM) {
-        return ((num_node_t *) node)->value;
-    }
-    else if (node->type == BINARY_OP) {
-        node_t *left = opt2(((binary_node_t *) node)->left);
-        node_t *right = opt2(((binary_node_t *) node)->right);
-        if (left->type == NULL && right->type == NULL) {
-            return NULL;
-        }
-        else if (left->type == NUM && right->type == NUM) {
-            switch (((binary_node_t *) node)->op) {
-                value_t val;
-                case ('+'): {
-                    val = ((num_node_t *) left)->value + ((num_node_t *) right)->value;
-                    break;
-                }
-                case ('-'): {
-                    val = ((num_node_t *) left)->value - ((num_node_t *) right)->value;
-                    break;
-                }
-                case ('*'): {
-                    val = ((num_node_t *) left)->value * ((num_node_t *) right)->value;
-                    break;
-                }
-                case ('/'): {
-                    val = ((num_node_t *) left)->value / ((num_node_t *) right)->value;
-                    break;
-                }
-                    return val;
-            }
-        }
-    }
-}
-
 bool compile_ast(node_t *node) {
     if (node == NULL) {
         return false;
