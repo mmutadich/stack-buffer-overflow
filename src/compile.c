@@ -4,6 +4,37 @@
 #include <stdlib.h>
 
 int64_t COUNT = 0;
+int64_t power_of_two(int64_t num){
+    int64_t pow = 0;
+    while (num > 1 && (num % 2 == 0)){
+        num = num / 2;
+        pow +=1;
+    }
+    if (num == 1){
+        return pow;
+    } else {
+        return 0;
+    }
+}
+
+bool check_const(binary_node_t *node){
+    if(node == NULL){
+        return false;
+    }else if ((((node_t *)node->left)->type) == NULL || (((node_t *)node->left)->type) == NULL){
+        return false;
+    } else if((((node_t *)node->left)->type) == NUM && (((node_t *)node->left)->type)  == NUM){
+        return true;
+    } else if(((node_t *)node->left)->type == NUM){
+        check_const(node->right);
+    } else if(((node_t *)node->right)->type == NUM){
+        check_const(node->left);
+    } else{
+        check_const(node->right);
+        check_const(node->left);
+    }
+
+}
+
 
 bool compile_ast(node_t *node) {
     if (node == NULL) {
@@ -32,32 +63,74 @@ bool compile_ast(node_t *node) {
         }
         case (BINARY_OP): {
             binary_node_t *bin = (binary_node_t *) node;
-            if (!compile_ast(bin->left)) {
-                return false;
-            }
-            printf("pushq %%rdi\n");
-            if (!compile_ast(bin->right)) {
-                return false;
-            }
-            printf("popq %%rax\n");
             switch (bin->op) {
                 case ('/'): {
+                    if (!compile_ast(bin->left)) {
+                        return false;
+                    }
+                    printf("pushq %%rdi\n");
+                    if (!compile_ast(bin->right)) {
+                        return false;
+                    }
+                    printf("popq %%rax\n");
                     printf("cqto\n");
                     printf("idivq %%rdi\n");
                     printf("movq %%rax, %%rdi\n");
                     return true;
                 }
                 case ('*'): {
+                    int64_t k;
+                    if (bin->right->type == NUM && bin->left->type == NUM){
+                        int64_t result = (((num_node_t *)bin->right)->value) * (((num_node_t *)bin->left)->value);
+                        printf("movq $%ld, %%rdi\n", result);
+                        return true;
+                    }
+                    else if (bin->right->type == NUM){
+                        k = ((num_node_t *) bin->right)->value;
+                        int64_t pow = power_of_two(k);
+                        if (pow > 0){
+                            compile_ast(bin->left);
+                            printf("shl $%ld, %%rdi\n", pow);
+                            return true;
+                        }
+                    }
+                    else if (bin->left->type == NUM){
+                        k = ((num_node_t *) bin->left)->value;
+                        int64_t pow = power_of_two(k);
+                        if (pow > 0){
+                            compile_ast(bin->right);
+                            printf("shl $%ld, %%rdi\n", pow);
+                            return true;
+                        }
+                    }
+                    compile_ast(bin->left);
+                    printf("pushq %%rdi\n");
+                    compile_ast(bin->right);
+                    printf("popq %%rax\n");
                     printf("imulq %%rax, %%rdi\n");
-
                     return true;
                 }
                 case ('-'): {
-                    printf("subq %%rdi, %%rax\n");
-                    printf("movq %%rax, %%rdi\n");
+                    if (!compile_ast(bin->right)) {
+                        return false;
+                    }
+                    printf("pushq %%rdi\n");
+                    if (!compile_ast(bin->left)) {
+                        return false;
+                    }
+                    printf("popq %%rax\n");
+                    printf("subq %%rax, %%rdi\n");
                     return true;
                 }
                 case ('+'): {
+                    if (!compile_ast(bin->left)) {
+                        return false;
+                    }
+                    printf("pushq %%rdi\n");
+                    if (!compile_ast(bin->right)) {
+                        return false;
+                    }
+                    printf("popq %%rax\n");
                     printf("addq %%rax, %%rdi\n");
                     return true;
                 }
@@ -67,8 +140,7 @@ bool compile_ast(node_t *node) {
             var_node_t *var_node = (var_node_t *) node;
             var_name_t name = var_node->name;
             int64_t sub = (name - 'A' + 1) * -8;
-            printf("movq %ld(%%rbp), %%rsi\n", sub);
-            printf("movq %%rsi, %%rdi\n");
+            printf("movq %ld(%%rbp), %%rdi\n", sub);
             return true;
         }
         case (LET): {
