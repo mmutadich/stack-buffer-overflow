@@ -4,37 +4,43 @@
 #include <stdlib.h>
 
 int64_t COUNT = 0;
-int64_t power_of_two(int64_t num){
+int64_t power_of_two(int64_t num) {
     int64_t pow = 0;
-    while (num > 1 && (num % 2 == 0)){
+    while (num > 1 && (num % 2 == 0)) {
         num = num / 2;
-        pow +=1;
+        pow += 1;
     }
-    if (num == 1){
+    if (num == 1) {
         return pow;
-    } else {
+    }
+    else {
         return 0;
     }
 }
 
-bool check_const(binary_node_t *node){
-    if(node == NULL){
+bool check_const(binary_node_t *node) {
+    if (node == NULL) {
         return false;
-    }else if ((((node_t *)node->left)->type) == NULL || (((node_t *)node->left)->type) == NULL){
+    }
+    else if ((((node_t *) node->left)->type) == NULL ||
+             (((node_t *) node->left)->type) == NULL) {
         return false;
-    } else if((((node_t *)node->left)->type) == NUM && (((node_t *)node->left)->type)  == NUM){
+    }
+    else if ((((node_t *) node->left)->type) == NUM &&
+             (((node_t *) node->left)->type) == NUM) {
         return true;
-    } else if(((node_t *)node->left)->type == NUM){
+    }
+    else if (((node_t *) node->left)->type == NUM) {
         check_const(node->right);
-    } else if(((node_t *)node->right)->type == NUM){
+    }
+    else if (((node_t *) node->right)->type == NUM) {
         check_const(node->left);
-    } else{
+    }
+    else {
         check_const(node->right);
         check_const(node->left);
     }
-
 }
-
 
 bool compile_ast(node_t *node) {
     if (node == NULL) {
@@ -80,24 +86,25 @@ bool compile_ast(node_t *node) {
                 }
                 case ('*'): {
                     int64_t k;
-                    if (bin->right->type == NUM && bin->left->type == NUM){
-                        int64_t result = (((num_node_t *)bin->right)->value) * (((num_node_t *)bin->left)->value);
+                    if (bin->right->type == NUM && bin->left->type == NUM) {
+                        int64_t result = (((num_node_t *) bin->right)->value) *
+                                         (((num_node_t *) bin->left)->value);
                         printf("movq $%ld, %%rdi\n", result);
                         return true;
                     }
-                    else if (bin->right->type == NUM){
+                    else if (bin->right->type == NUM) {
                         k = ((num_node_t *) bin->right)->value;
                         int64_t pow = power_of_two(k);
-                        if (pow > 0){
+                        if (pow > 0) {
                             compile_ast(bin->left);
                             printf("shl $%ld, %%rdi\n", pow);
                             return true;
                         }
                     }
-                    else if (bin->left->type == NUM){
+                    else if (bin->left->type == NUM) {
                         k = ((num_node_t *) bin->left)->value;
                         int64_t pow = power_of_two(k);
-                        if (pow > 0){
+                        if (pow > 0) {
                             compile_ast(bin->right);
                             printf("shl $%ld, %%rdi\n", pow);
                             return true;
