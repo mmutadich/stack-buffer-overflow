@@ -18,6 +18,52 @@ int64_t power_of_two(int64_t num) {
     }
 }
 
+bool is_compress(node_t *node){
+    if (node->type != NUM && node->type != BINARY_OP) {
+        return false;
+    } else if(node->type == NUM){
+        return true;
+    } else if(node->type == BINARY_OP){
+        bool left = is_compress(((binary_node_t *) node)->left);
+        bool right = is_compress(((binary_node_t *) node)->right);
+        if (left != true || right != true){
+            return false;
+        } else {
+            return true;
+        }
+    }
+    return false;
+}
+
+value_t compress(node_t *node){
+    if(node->type == NUM){
+        return ((num_node_t *) node)->value;
+    } else if (node->type == BINARY_OP) {
+        value_t left = compress(((binary_node_t *) node)->left);
+        value_t right = compress(((binary_node_t *) node)->right);
+        switch (((binary_node_t *) node)->op) {
+            case ('+'): {
+                return left + right;
+                break;
+            }
+            case ('-'): {
+                return left - right;
+                break;
+            }
+            case ('*'): {
+                return left * right;
+                break;
+            }
+            case ('/'): {
+                return left / right;
+                break;
+            }
+        }
+    }
+    return 0;
+}
+
+
 bool compile_ast(node_t *node) {
     if (node == NULL) {
         return false;
@@ -44,6 +90,11 @@ bool compile_ast(node_t *node) {
             return true;
         }
         case (BINARY_OP): {
+            if (is_compress(node)){
+                value_t val = compress(node);
+                printf("movq $%ld, %%rdi\n", val);
+                return true;
+            }
             binary_node_t *bin = (binary_node_t *) node;
             switch (bin->op) {
                 case ('/'): {
